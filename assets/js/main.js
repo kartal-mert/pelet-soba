@@ -181,7 +181,11 @@ function initGalleryModal() {
 function initSwipeGalleries() {
   const galleries = document.querySelectorAll('.swipe-gallery');
   galleries.forEach(gallery => {
+    // Fotoğrafların yukarı-aşağı kaymasını sıfırla
+    gallery.scrollTop = 0;
+
     const wrapper = document.createElement('div');
+    wrapper.className = 'swipe-gallery-wrapper';
     wrapper.style.position = 'relative';
     wrapper.style.borderRadius = gallery.style.borderRadius || '0';
     wrapper.style.overflow = 'hidden';
@@ -190,11 +194,13 @@ function initSwipeGalleries() {
     wrapper.appendChild(gallery);
 
     const leftBtn = document.createElement('button');
+    leftBtn.setAttribute('aria-label', 'Önceki fotoğraf');
     leftBtn.innerHTML = '&#10094;';
     leftBtn.style.cssText = 'position:absolute; top:50%; left:8px; transform:translateY(-50%); width:32px; height:32px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10; transition:background 0.3s; padding-right:3px; outline:none;';
     leftBtn.onclick = (e) => { e.preventDefault(); gallery.scrollBy({ left: -gallery.offsetWidth, behavior: 'smooth' }); };
     
     const rightBtn = document.createElement('button');
+    rightBtn.setAttribute('aria-label', 'Sonraki fotoğraf');
     rightBtn.innerHTML = '&#10095;';
     rightBtn.style.cssText = 'position:absolute; top:50%; right:8px; transform:translateY(-50%); width:32px; height:32px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10; transition:background 0.3s; padding-left:3px; outline:none;';
     rightBtn.onclick = (e) => { e.preventDefault(); gallery.scrollBy({ left: gallery.offsetWidth, behavior: 'smooth' }); };
@@ -206,8 +212,78 @@ function initSwipeGalleries() {
 
     wrapper.appendChild(leftBtn);
     wrapper.appendChild(rightBtn);
+
+    // Slide / Nokta (Dots) İndikatörleri
+    const slides = gallery.querySelectorAll(':scope > div');
+    let dots = [];
+    if (slides.length > 1) {
+      const dotsContainer = document.createElement('div');
+      dotsContainer.style.cssText = 'position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:10; pointer-events:auto;';
+      
+      slides.forEach((_, idx) => {
+        const dot = document.createElement('span');
+        dot.style.cssText = 'width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.5); cursor:pointer; transition:all 0.25s; box-shadow:0 1px 3px rgba(0,0,0,0.5); display:inline-block;';
+        if (idx === 0) {
+          dot.style.background = '#ffffff';
+          dot.style.transform = 'scale(1.25)';
+        }
+        dot.onclick = (e) => {
+          e.preventDefault();
+          gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' });
+        };
+        dots.push(dot);
+        dotsContainer.appendChild(dot);
+      });
+      wrapper.appendChild(dotsContainer);
+
+      gallery.addEventListener('scroll', () => {
+        // Her zaman dikey kaymayı 0'da tut (fotoğraflar yukarı-aşağı oynamasın)
+        if (gallery.scrollTop !== 0) gallery.scrollTop = 0;
+        
+        const activeIdx = Math.round(gallery.scrollLeft / gallery.offsetWidth);
+        dots.forEach((dot, idx) => {
+          if (idx === activeIdx) {
+            dot.style.background = '#ffffff';
+            dot.style.transform = 'scale(1.25)';
+          } else {
+            dot.style.background = 'rgba(255,255,255,0.5)';
+            dot.style.transform = 'scale(1)';
+          }
+        });
+      }, { passive: true });
+    }
+
+    // Mobil Dokunma (Touch / Swipe) Yönetimi:
+    // Dikey harekette (aşağı/yukarı) sayfa kaysın, fotoğraflar kesinlikle yukarı/aşağı oynamasın.
+    // Yalnızca yatay harekette (sağa/sola) yandaki fotoğraflara kaysın.
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    gallery.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    gallery.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      // Yatay hareket dikey hareketten belirgin biçimde büyükse yana kaydır
+      if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX < 0) {
+          // Sola sürükleme -> sonraki fotoğraf
+          gallery.scrollBy({ left: gallery.offsetWidth, behavior: 'smooth' });
+        } else {
+          // Sağa sürükleme -> önceki fotoğraf
+          gallery.scrollBy({ left: -gallery.offsetWidth, behavior: 'smooth' });
+        }
+      }
+    }, { passive: true });
   });
 }
-
-
 

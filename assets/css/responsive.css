@@ -566,9 +566,50 @@
   }
 
   /* --- SWIPE GALLERY MOBİL İYİLEŞTİRMELERİ --- */
+  .swipe-gallery-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
   .swipe-gallery {
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pinch-zoom !important;
+    overscroll-behavior-x: contain !important;
+    overscroll-behavior-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .swipe-gallery::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .swipe-gallery > div {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+  }
+
+  .swipe-gallery img {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-user-drag: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: none !important;
   }
 
   /* --- INLINE STYLE GENEL OVERRIDE'LAR --- */
